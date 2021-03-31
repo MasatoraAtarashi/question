@@ -2,9 +2,13 @@ package cmd
 
 import (
 	"fmt"
-
 	"github.com/spf13/cobra"
 )
+
+type Options struct {
+	Name string
+	Content string
+}
 
 // initCmd represents the init command
 var initCmd = &cobra.Command{
@@ -16,14 +20,12 @@ var initCmd = &cobra.Command{
 }
 
 func runInitCmd(cmd *cobra.Command, args []string) (err error) {
-	fmt.Print("init called by ")
 	name, err := cmd.PersistentFlags().GetString("name")
 	if err != nil {
 		return err
 	}
-	if name != "" {
-		fmt.Println(name)
-	}
+	question, err := NewQuestion(name)
+	fmt.Println(question.content)
 	return
 }
 
