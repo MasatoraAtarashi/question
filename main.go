@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "question/cmd"
+import "github.com/MasatoraAtarashi/question/cmd"
 
 func main() {
 	cmd.Execute()
