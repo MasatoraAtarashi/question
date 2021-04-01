@@ -9,6 +9,45 @@ import (
 	"path/filepath"
 )
 
+const (
+	template = 	`################################
+# 以下の8項目を入力してください。
+################################
+
+### 1. 概要
+# (例): ○○を実行すると、○○というエラーになる問題で困っています。
+
+
+### 2. 発生している問題
+# エラーメッセージやキャプチャを入力してください。
+
+
+### 3. 発生している問題を再現する手順
+# (例): (1) XXXX.cgiをhttp://xxxx からダウンロードする。
+#		(2) 管理ファイル名$adminの値をadmin.datからadmin.txtに変更する。
+
+
+### 4. 期待していた結果
+
+
+### 5. 参考資料
+
+
+### 6. 問題解決のために自分自身で行ったこと
+# (例): (a) 入力を○○ではなく××にしてみた
+# 		→上記と同じ結果になった
+
+
+### 7. 詳細なログ
+
+
+### 8. 環境設定情報
+# 【マシン, メモリ量, 関連周辺機器, OS, 利用ソフト, バージョンなど】を箇条書きにしてください。
+
+
+`
+)
+
 type Options struct {
 	Name string
 	Content string
@@ -83,8 +122,11 @@ func getUserInput() (userInput UserInput, err error) {
 func makeTmpFile() (fpath string, err error) {
 	home := os.Getenv("HOME")
 	fpath = filepath.Join(home, "QUESTION_EDITMSG")
+	if err != nil {
+		return
+	}
 	if !isFileExist(fpath) {
-		err = ioutil.WriteFile(fpath, []byte(""), 0644)
+		err = ioutil.WriteFile(fpath, []byte(template), 0644)
 		if err != nil {
 			return
 		}
