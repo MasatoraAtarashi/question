@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
@@ -12,7 +13,7 @@ import (
 var cfgFile string
 
 type Config struct {
-	 Question	QuestionConfig
+	Question QuestionConfig
 }
 
 type QuestionConfig struct {
@@ -24,7 +25,6 @@ var config Config
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "question",
-	//TODO: 説明書く
 	Short: "description",
 }
 
