@@ -66,5 +66,4 @@ func initConfig() {
 	if err := viper.Unmarshal(&config); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 	}
-	fmt.Println(config.Question.Name)
 }
