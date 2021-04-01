@@ -1,60 +1,72 @@
 package cmd
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
+
+	"github.com/spf13/cobra"
 )
 
 const (
-	template = 	`################################
-# 以下の8項目を入力してください。
-################################
-
-### 1. 概要
-# (例): ○○を実行すると、○○というエラーになる問題で困っています。
-
-
-### 2. 発生している問題
-# エラーメッセージやキャプチャを入力してください。
+	template = `#################################
+## 以下の8項目を入力してください。
+#################################
+# 1. 概要
+## (例): ○○を実行すると、○○というエラーになる問題で困っています。
 
 
-### 3. 発生している問題を再現する手順
-# (例): (1) XXXX.cgiをhttp://xxxx からダウンロードする。
-#		(2) 管理ファイル名$adminの値をadmin.datからadmin.txtに変更する。
+# 2. 発生している問題
+## エラーメッセージやキャプチャを入力してください。
 
 
-### 4. 期待していた結果
+# 3. 発生している問題を再現する手順
+## (例): 
+## (1) XXXX.cgiをhttp://xxxx からダウンロードする。
+## (2) 管理ファイル名$adminの値をadmin.datからadmin.txtに変更する。
 
 
-### 5. 参考資料
+# 4. 期待していた結果
 
 
-### 6. 問題解決のために自分自身で行ったこと
-# (例): (a) 入力を○○ではなく××にしてみた
-# 		→上記と同じ結果になった
+# 5. 参考資料
 
 
-### 7. 詳細なログ
+# 6. 問題解決のために自分自身で行ったこと
+## (例): 
+## (1) 入力を○○ではなく××にしてみた
+## →上記と同じ結果になった
 
 
-### 8. 環境設定情報
-# 【マシン, メモリ量, 関連周辺機器, OS, 利用ソフト, バージョンなど】を箇条書きにしてください。
+# 7. 詳細なログ
+
+
+# 8. 環境設定情報
+## 【マシン, メモリ量, 関連周辺機器, OS, 利用ソフト, バージョンなど】を箇条書きにしてください。
 
 
 `
 )
 
 type Options struct {
-	Name string
+	Name    string
 	Content string
 }
 
 type UserInput struct {
-	Situation string
+	Overview    string
+	Probrem     string
+	Procedure   string
+	Expected    string
+	Reference   string
+	TriedAction string
+	Log         string
+	Env         string
 }
 
 // initCmd represents the init command
@@ -110,7 +122,7 @@ func getUserInput() (userInput UserInput, err error) {
 		return
 	}
 
-	userInput, err = parseUserInput(string(content))
+	userInput, err = parseUserInput(content)
 	if err != nil {
 		fmt.Fprint(os.Stdout, fmt.Sprintf("faild parse input. %s\n", err.Error()))
 		return
@@ -151,9 +163,43 @@ func openEditor(program string, fpath string) error {
 	return c.Run()
 }
 
-func parseUserInput(content string) (userInput UserInput, err error) {
+func parseUserInput(content []byte) (userInput UserInput, err error) {
+	var overview = ""
+	var probrem = ""
+	var procedure = ""
+	var expected = ""
+	var reference = ""
+	var tried_action = ""
+	var log = ""
+	var env = ""
+	var variables = []*string{nil, &overview, &probrem, &procedure, &expected, &reference, &tried_action, &log, &env}
+	var i = 0
+
+	reader := bytes.NewReader(content)
+	scanner := bufio.NewScanner(reader)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "##") || line == "" {
+			continue
+		}
+		if strings.HasPrefix(line, "#") {
+			i++
+			if i >= len(variables) {
+				break
+			}
+			continue
+		}
+		*variables[i] += line + "\n"
+	}
 	userInput = UserInput{
-		Situation: content,
+		Overview:    overview,
+		Probrem:     probrem,
+		Procedure:   procedure,
+		Expected:    expected,
+		Reference:   reference,
+		TriedAction: tried_action,
+		Log:         log,
+		Env:         env,
 	}
 	return
 }
