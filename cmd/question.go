@@ -5,14 +5,14 @@ import "fmt"
 // Question struct
 type Question struct {
 	name 	string
-	content string
+	situation string
 }
 
 // NewQuestion returns pointer of Question struct that made by options
-func NewQuestion(name string) (*Question, error) {
+func NewQuestion(userInput UserInput, name string) (*Question, error) {
 	question := &Question{
 		name: name,
-		content: "content of question",
+		situation: userInput.Situation,
 	}
 	return question, nil
 }
@@ -22,7 +22,7 @@ func (question *Question) render() error {
 	if question.name != "" {
 		content += question.name + "です。\n"
 	}
-	content += question.content + "\n\n"
+	content += question.situation + "\n\n"
 	content += "よろしくお願いいたします。"
 	fmt.Println(content)
 	return nil
