@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	template = `#################################
+	QUESTION_TEMPLATE = `#################################
 ## 以下の8項目を入力してください。
 #################################
 # 1. 概要
@@ -138,7 +138,7 @@ func makeTmpFile() (fpath string, err error) {
 		return
 	}
 	if !isFileExist(fpath) {
-		err = ioutil.WriteFile(fpath, []byte(template), 0644)
+		err = ioutil.WriteFile(fpath, []byte(QUESTION_TEMPLATE), 0644)
 		if err != nil {
 			return
 		}
