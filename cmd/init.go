@@ -19,7 +19,7 @@ var initCmd = &cobra.Command{
 }
 
 func runInitCmd(cmd *cobra.Command, args []string) (err error) {
-	name, err := cmd.PersistentFlags().GetString("name")
+	name, err := getName(cmd)
 	if err != nil {
 		return err
 	}
@@ -31,7 +31,21 @@ func runInitCmd(cmd *cobra.Command, args []string) (err error) {
 	return
 }
 
+// get name from option or config
+func getName(cmd *cobra.Command) (name string, err error) {
+	name, err = cmd.PersistentFlags().GetString("name")
+	if err != nil {
+		return
+	}
+	if name == "" {
+		name = config.Question.Name
+	}
+	return
+}
+
 func init() {
+	// options
 	initCmd.PersistentFlags().StringP("name", "n", "", "your name")
+
 	rootCmd.AddCommand(initCmd)
 }
