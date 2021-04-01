@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 )
 
@@ -25,7 +24,10 @@ func runInitCmd(cmd *cobra.Command, args []string) (err error) {
 		return err
 	}
 	question, err := NewQuestion(name)
-	fmt.Println(question.content)
+	err = question.render()
+	if err != nil {
+		return err
+	}
 	return
 }
 
