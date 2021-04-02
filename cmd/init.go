@@ -92,26 +92,31 @@ var initCmd = &cobra.Command{
 }
 
 func runInitCmd(cmd *cobra.Command, args []string) (err error) {
+	// ユーザからの入力を受け取る
 	userInput, err := getUserInput()
 	if err != nil {
 		return
 	}
 
+	// ユーザ名を取得
 	name, err := getName(cmd)
 	if err != nil {
 		return
 	}
 
+	// struct Questionにマッピング
 	question, err := NewQuestion(userInput, name)
 	if err != nil {
 		return
 	}
 
+	// 質問文を生成
 	result, err := question.Execute()
 	if err != nil {
 		return
 	}
 
+	// 生成された質問文をユーザに確認してもらう
 	result, err = confirmQuestion(result)
 	if err != nil {
 		return
@@ -239,6 +244,7 @@ func parseUserInput(content []byte) (userInput UserInput, err error) {
 }
 
 func validateUserInput(requireUserInput *RequireUserInput) (valid bool, empty_vars []string, err error) {
+	valid = true
 	u := reflect.TypeOf(*requireUserInput)
 	elem := reflect.ValueOf(requireUserInput).Elem()
 	cnt := elem.NumField()

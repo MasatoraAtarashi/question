@@ -25,19 +25,19 @@ func NewQuestion(userInput UserInput, name string) (*Question, error) {
 
 func (question *Question) Execute() (result string, err error) {
 	s := `{{.Greet}} {{.Name}}です。
-{{.UserInput.Subject }}についてご質問させていただきたいです。
+{{.UserInput.RequireUserInput.Subject }}についてご質問させていただきたいです。
 
 {{ if .UserInput.Reference -}}
-現在、{{.UserInput.Reference}}を参考に{{.UserInput.Ideal}}を実現したいと思っております。	
+現在、{{.UserInput.Reference}}を参考に{{.UserInput.RequireUserInput.Ideal}}を実現したいと思っております。	
 {{ else -}}
-現在、{{.UserInput.Ideal}}を実現したいと思っております。
+現在、{{.UserInput.RequireUserInput.Ideal}}を実現したいと思っております。
 {{ end -}}
 
 私の行った手順は以下です。
-{{.UserInput.Procedure}}
+{{.UserInput.RequireUserInput.Procedure}}
 
 すると、以下のエラーが発生しました。
-{{.UserInput.Problem}}
+{{.UserInput.RequireUserInput.Problem}}
 
 {{ if .UserInput.Source -}}
 該当のソースコードはこちらです。
@@ -47,7 +47,7 @@ func (question *Question) Execute() (result string, err error) {
 {{ end -}}
 
 原因を確かめるため、以下を試してみましたが、問題の解決には至りませんでした。
-{{ .UserInput.TriedAction }}
+{{ .UserInput.RequireUserInput.TriedAction }}
 
 {{ if .UserInput.Env -}}
 なお、私の環境は以下の通りです。
