@@ -80,7 +80,6 @@ var initCmd = &cobra.Command{
 
 func runInitCmd(cmd *cobra.Command, args []string) (err error) {
 	userInput, err := getUserInput()
-
 	if err != nil {
 		return
 	}
@@ -91,17 +90,27 @@ func runInitCmd(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	question, err := NewQuestion(userInput, name)
-	err = question.render()
 	if err != nil {
 		return
 	}
 
+	result, err := question.Execute()
+	if err != nil {
+		return
+	}
+
+	result, err = confirmQuestion(result)
+	if err != nil {
+		return
+	}
+
+	fmt.Printf(result)
 	return
 }
 
 func getUserInput() (userInput UserInput, err error) {
 	// make tmp file
-	fpath, err := makeTmpFile()
+	fpath, err := makeTmpFile(QUESTION_TEMPLATE)
 	if err != nil {
 		fmt.Fprint(os.Stdout, fmt.Sprintf("failed make edit file. %s\n", err.Error()))
 		return
@@ -131,14 +140,14 @@ func getUserInput() (userInput UserInput, err error) {
 	return
 }
 
-func makeTmpFile() (fpath string, err error) {
+func makeTmpFile(msg string) (fpath string, err error) {
 	home := os.Getenv("HOME")
 	fpath = filepath.Join(home, "QUESTION_EDITMSG")
 	if err != nil {
 		return
 	}
 	if !isFileExist(fpath) {
-		err = ioutil.WriteFile(fpath, []byte(QUESTION_TEMPLATE), 0644)
+		err = ioutil.WriteFile(fpath, []byte(msg), 0644)
 		if err != nil {
 			return
 		}
@@ -206,6 +215,33 @@ func parseUserInput(content []byte) (userInput UserInput, err error) {
 		Log:         log,
 		Env:         env,
 	}
+	return
+}
+
+func confirmQuestion(draft string) (result string, err error) {
+	const instruction = "###### 質問文を確認してください。 ######\n\n"
+	msg := instruction + draft
+	fpath, err := makeTmpFile(msg)
+	if err != nil {
+		fmt.Fprint(os.Stdout, fmt.Sprintf("failed make edit file. %s\n", err.Error()))
+		return
+	}
+	defer deleteFile(fpath)
+
+	err = openEditor("vim", fpath)
+	if err != nil {
+		fmt.Fprint(os.Stdout, fmt.Sprintf("failed open text editor. %s\n", err.Error()))
+		return
+	}
+
+	// read edit file
+	content, err := ioutil.ReadFile(fpath)
+	if err != nil {
+		fmt.Fprint(os.Stdout, fmt.Sprintf("failed read content. %s\n", err.Error()))
+		return
+	}
+	result = string(content)
+	result = strings.TrimLeft(result, instruction)
 	return
 }
 

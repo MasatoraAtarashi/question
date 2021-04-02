@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"os"
+	"bytes"
 	"strings"
 	"text/template"
 )
@@ -23,7 +23,7 @@ func NewQuestion(userInput UserInput, name string) (*Question, error) {
 	return question, nil
 }
 
-func (question *Question) render() (err error) {
+func (question *Question) Execute() (result string, err error) {
 	s := `{{.Greet}} {{.Name}}です。
 {{.UserInput.Subject }}についてご質問させていただきたいです。
 
@@ -59,7 +59,7 @@ func (question *Question) render() (err error) {
 #source
 {{ .UserInput.Log }}
 #source
-{{ end -}}
+{{ end }}
 
 何卒よろしくお願いいたします。	
 `
@@ -68,6 +68,8 @@ func (question *Question) render() (err error) {
 	if err != nil {
 		return
 	}
-	err = tmpl.Execute(os.Stdout, question)
+	var doc bytes.Buffer
+	err = tmpl.Execute(&doc, question)
+	result = doc.String()
 	return
 }
