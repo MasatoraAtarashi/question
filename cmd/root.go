@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
@@ -11,10 +12,19 @@ import (
 
 var cfgFile string
 
+type Config struct {
+	Question QuestionConfig
+}
+
+type QuestionConfig struct {
+	Name string
+}
+
+var config Config
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "question",
-	//TODO: 説明書く
 	Short: "description",
 }
 
@@ -43,12 +53,17 @@ func initConfig() {
 		// Search config in home directory with name ".question" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".question")
+		viper.SetConfigType("yaml")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+	if err := viper.ReadInConfig(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	}
+
+	if err := viper.Unmarshal(&config); err != nil {
+		fmt.Fprintln(os.Stderr, err)
 	}
 }
