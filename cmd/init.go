@@ -244,6 +244,7 @@ func parseUserInput(content []byte) (userInput UserInput, err error) {
 }
 
 func validateUserInput(requireUserInput *RequireUserInput) (valid bool, empty_vars []string, err error) {
+	valid = true
 	u := reflect.TypeOf(*requireUserInput)
 	elem := reflect.ValueOf(requireUserInput).Elem()
 	cnt := elem.NumField()
