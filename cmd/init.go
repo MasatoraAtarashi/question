@@ -14,39 +14,34 @@ import (
 )
 
 const (
-	QUESTION_TEMPLATE = `#################################
-## 以下の8項目を入力してください。
-#################################
-# 1. 概要
-## (例): ○○を実行すると、○○というエラーになる問題で困っています。
+	QUESTION_TEMPLATE = `## 以下の項目を入力してください。
+
+# 1. タイトル(必須)
+## わからないこと・解決したいことを入力してください。
 
 
-# 2. 発生している問題
-## エラーメッセージやキャプチャを入力してください。
+# 2. 実現したいこと(必須)
 
 
-# 3. 発生している問題を再現する手順
-## (例): 
-## (1) XXXX.cgiをhttp://xxxx からダウンロードする。
-## (2) 管理ファイル名$adminの値をadmin.datからadmin.txtに変更する。
+# 3. 発生している問題・エラーメッセージ(必須)
 
 
-# 4. 期待していた結果
+# 4. 発生している問題を再現する手順(必須)
 
 
-# 5. 参考資料
+# 5. 該当のソースコード(オプション)
 
 
-# 6. 問題解決のために自分自身で行ったこと
-## (例): 
-## (1) 入力を○○ではなく××にしてみた
-## →上記と同じ結果になった
+# 6. 試したこと(必須)
 
 
-# 7. 詳細なログ
+# 7. 参考資料(オプション)
 
 
-# 8. 環境設定情報
+# 8. 詳細なログ(オプション)
+
+
+# 9. 環境設定情報(オプション)
 ## 【マシン, メモリ量, 関連周辺機器, OS, 利用ソフト, バージョンなど】を箇条書きにしてください。
 
 
@@ -59,12 +54,13 @@ type Options struct {
 }
 
 type UserInput struct {
-	Overview    string
-	Probrem     string
+	Subject     string
+	Ideal       string
+	Problem     string
 	Procedure   string
-	Expected    string
-	Reference   string
+	Source      string
 	TriedAction string
+	Reference   string
 	Log         string
 	Env         string
 }
@@ -74,7 +70,10 @@ var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "A brief description of your command",
 	Run: func(cmd *cobra.Command, args []string) {
-		runInitCmd(cmd, args)
+		err := runInitCmd(cmd, args)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, err.Error())
+		}
 	},
 }
 
@@ -164,15 +163,16 @@ func openEditor(program string, fpath string) error {
 }
 
 func parseUserInput(content []byte) (userInput UserInput, err error) {
-	var overview = ""
-	var probrem = ""
+	var subject = ""
+	var ideal = ""
+	var problem = ""
 	var procedure = ""
-	var expected = ""
-	var reference = ""
+	var source = ""
 	var tried_action = ""
+	var reference = ""
 	var log = ""
 	var env = ""
-	var variables = []*string{nil, &overview, &probrem, &procedure, &expected, &reference, &tried_action, &log, &env}
+	var variables = []*string{nil, &subject, &ideal, &problem, &procedure, &source, &tried_action, &reference, &log, &env}
 	var i = 0
 
 	reader := bytes.NewReader(content)
@@ -183,6 +183,9 @@ func parseUserInput(content []byte) (userInput UserInput, err error) {
 			continue
 		}
 		if strings.HasPrefix(line, "#") {
+			if i > 0 {
+				*variables[i] = strings.Trim(*variables[i], "\n")
+			}
 			i++
 			if i >= len(variables) {
 				break
@@ -192,12 +195,13 @@ func parseUserInput(content []byte) (userInput UserInput, err error) {
 		*variables[i] += line + "\n"
 	}
 	userInput = UserInput{
-		Overview:    overview,
-		Probrem:     probrem,
+		Subject:     subject,
+		Ideal:       ideal,
+		Problem:     problem,
 		Procedure:   procedure,
-		Expected:    expected,
-		Reference:   reference,
+		Source:      source,
 		TriedAction: tried_action,
+		Reference:   reference,
 		Log:         log,
 		Env:         env,
 	}

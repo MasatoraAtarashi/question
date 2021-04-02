@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"strings"
 	"text/template"
 )
 
@@ -23,12 +24,47 @@ func NewQuestion(userInput UserInput, name string) (*Question, error) {
 }
 
 func (question *Question) render() (err error) {
-	tmpl, err := template.New("question").Parse(`
-{{.Greet}} {{.Name}}です。
-{{.UserInput.Overview}}という問題で困っています。
+	s := `{{.Greet}} {{.Name}}です。
+{{.UserInput.Subject }}についてご質問させていただきたいです。
 
-よろしくお願いいたします。	
-`)
+{{ if .UserInput.Reference -}}
+現在、{{.UserInput.Reference}}を参考に{{.UserInput.Ideal}}を実現したいと思っております。	
+{{ else -}}
+現在、{{.UserInput.Ideal}}を実現したいと思っております。
+{{ end -}}
+
+私の行った手順は以下です。
+{{.UserInput.Procedure}}
+
+すると、以下のエラーが発生しました。
+{{.UserInput.Problem}}
+
+{{ if .UserInput.Source -}}
+該当のソースコードはこちらです。
+#source
+{{ .UserInput.Source}}
+#source
+{{ end -}}
+
+原因を確かめるため、以下を試してみましたが、問題の解決には至りませんでした。
+{{ .UserInput.TriedAction }}
+
+{{ if .UserInput.Env -}}
+なお、私の環境は以下の通りです。
+{{ .UserInput.Env }}
+{{ end -}}
+
+{{ if .UserInput.Log -}}
+詳細なログは以下の通りです。
+#source
+{{ .UserInput.Log }}
+#source
+{{ end -}}
+
+何卒よろしくお願いいたします。	
+`
+	s = strings.Replace(s, "#source", "```", 4)
+	tmpl, err := template.New("question").Parse(s)
 	if err != nil {
 		return
 	}
