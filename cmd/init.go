@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"reflect"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -49,21 +50,33 @@ const (
 `
 )
 
+var requireUserInputLabels = map[string]string{
+	"Subject":     "タイトル",
+	"Ideal":       "実現したいこと",
+	"Problem":     "発生している問題",
+	"Procedure":   "発生している問題を再現する手順",
+	"TriedAction": "試したこと",
+}
+
 type Options struct {
 	Name    string
 	Content string
 }
 
-type UserInput struct {
+type RequireUserInput struct {
 	Subject     string
 	Ideal       string
 	Problem     string
 	Procedure   string
-	Source      string
 	TriedAction string
-	Reference   string
-	Log         string
-	Env         string
+}
+
+type UserInput struct {
+	RequireUserInput RequireUserInput
+	Source           string
+	Reference        string
+	Log              string
+	Env              string
 }
 
 // initCmd represents the init command
@@ -136,7 +149,6 @@ func getUserInput() (userInput UserInput, err error) {
 		fmt.Fprint(os.Stdout, fmt.Sprintf("faild parse input. %s\n", err.Error()))
 		return
 	}
-
 	return
 }
 
@@ -204,16 +216,38 @@ func parseUserInput(content []byte) (userInput UserInput, err error) {
 		}
 		*variables[i] += line + "\n"
 	}
-	userInput = UserInput{
+	requireUserInput := RequireUserInput{
 		Subject:     subject,
 		Ideal:       ideal,
 		Problem:     problem,
 		Procedure:   procedure,
-		Source:      source,
 		TriedAction: tried_action,
-		Reference:   reference,
-		Log:         log,
-		Env:         env,
+	}
+	valid, empty_vars, err := validateUserInput(&requireUserInput)
+	if !valid {
+		fmt.Fprintf(os.Stderr, "Abort!: %sは必須項目です", empty_vars)
+		os.Exit(1)
+	}
+	userInput = UserInput{
+		RequireUserInput: requireUserInput,
+		Source:           source,
+		Reference:        reference,
+		Log:              log,
+		Env:              env,
+	}
+	return
+}
+
+func validateUserInput(requireUserInput *RequireUserInput) (valid bool, empty_vars []string, err error) {
+	u := reflect.TypeOf(*requireUserInput)
+	elem := reflect.ValueOf(requireUserInput).Elem()
+	cnt := elem.NumField()
+	for i := 0; i < cnt; i++ {
+		value := elem.Field(i).String()
+		if value == "" {
+			valid = false
+			empty_vars = append(empty_vars, requireUserInputLabels[u.Field(i).Name])
+		}
 	}
 	return
 }
