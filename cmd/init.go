@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"strings"
 
@@ -216,6 +217,13 @@ func getName(cmd *cobra.Command) (name string, err error) {
 	}
 	if name == "" {
 		name = config.Question.Name
+	}
+	if name == "" {
+		user, err := user.Current()
+		if err != nil {
+			return "", err
+		}
+		name = user.Username
 	}
 	return
 }
