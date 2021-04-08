@@ -2,8 +2,13 @@ package cmd
 
 import (
 	"bytes"
+	"crypto/md5"
+	"fmt"
+	"io/ioutil"
+	"os"
 	"strings"
 	"text/template"
+	"time"
 )
 
 // Question struct
@@ -11,6 +16,9 @@ type Question struct {
 	Name      string
 	Greet     string
 	UserInput UserInput
+	Result    string
+	InitDate  string
+	Hash      string
 }
 
 // NewQuestion returns pointer of Question struct that made by options
@@ -19,11 +27,12 @@ func NewQuestion(userInput UserInput, name string) (*Question, error) {
 		Name:      name,
 		Greet:     "お疲れ様です。",
 		UserInput: userInput,
+		InitDate:  time.Now().String(),
 	}
 	return question, nil
 }
 
-func (question *Question) Execute() (result string, err error) {
+func (question *Question) Execute() (err error) {
 	s := `{{.Greet}} {{.Name}}です。
 {{.UserInput.RequireUserInput.Subject }}についてご質問させていただきたいです。
 
@@ -70,6 +79,68 @@ func (question *Question) Execute() (result string, err error) {
 	}
 	var doc bytes.Buffer
 	err = tmpl.Execute(&doc, question)
-	result = doc.String()
+	question.Result = doc.String()
+	return
+}
+
+// 生成された質問を保存する
+func (question *Question) Save() (err error) {
+	// .questionフォルダを作成する
+	home_dir := os.Getenv("HOME")
+	qpath := home_dir + "/.question"
+	if !fileExists(qpath) {
+		err = os.Mkdir(qpath, 0777)
+		if err != nil {
+			return
+		}
+	}
+
+	// 質問文保存フォルダを作成する
+	objpath := qpath + "/objects"
+	if !fileExists(objpath) {
+		err = os.Mkdir(objpath, 0777)
+		if err != nil {
+			return
+		}
+	}
+
+	// 質問文のメタ情報を作成する
+	err = initMetaInfo(question)
+	if err != nil {
+		return
+	}
+
+	// 質問文を保存する
+	data := []byte(question.Result)
+	err = ioutil.WriteFile(objpath+"/"+question.Hash, data, 0777)
+	if err != nil {
+		return
+	}
+
+	//logsフォルダを作成する
+	// ログ・ファイルにメタ情報を保存する
+	return nil
+}
+
+func fileExists(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil
+}
+
+// 質問文のメタ情報を作成する
+func initMetaInfo(question *Question) (err error) {
+	// ハッシュ
+	subject := question.UserInput.RequireUserInput.Subject
+	name := question.UserInput.RequireUserInput.Subject
+	initDate := question.InitDate
+	hash, err := initHash(subject + name + initDate)
+	question.Hash = hash
+	return
+}
+
+// 文字列からハッシュ値を計算する
+func initHash(str string) (hash string, err error) {
+	p := []byte(str)
+	hash = fmt.Sprintf("%x", md5.Sum(p))
 	return
 }
