@@ -13,28 +13,37 @@ import (
 
 // Question struct
 type Question struct {
-	Name      string
 	Greet     string
 	UserInput UserInput
 	Result    string
-	InitDate  string
-	Hash      string
+	MetaInfo  MetaInfo
+}
+
+type MetaInfo struct {
+	Hash     string
+	UserName string
+	InitDate string
+	Subject  string
 }
 
 // NewQuestion returns pointer of Question struct that made by options
 func NewQuestion(userInput UserInput, name string) (*Question, error) {
 	question := &Question{
-		Name:      name,
 		Greet:     "お疲れ様です。",
 		UserInput: userInput,
-		InitDate:  time.Now().String(),
+		MetaInfo: MetaInfo{
+			Hash:     "",
+			UserName: name,
+			InitDate: time.Now().String(),
+			Subject:  userInput.RequireUserInput.Subject,
+		},
 	}
 	return question, nil
 }
 
 func (question *Question) Execute() (err error) {
-	s := `{{.Greet}} {{.Name}}です。
-{{.UserInput.RequireUserInput.Subject }}についてご質問させていただきたいです。
+	s := `{{.Greet}} {{.MetaInfo.UserName}}です。
+{{.UserInput.RequireUserInput.Subject}}についてご質問させていただきたいです。
 
 {{ if .UserInput.Reference -}}
 現在、{{.UserInput.Reference}}を参考に{{.UserInput.RequireUserInput.Ideal}}を実現したいと思っております。	
@@ -112,7 +121,7 @@ func (question *Question) Save() (err error) {
 
 	// 質問文を保存する
 	data := []byte(question.Result)
-	err = ioutil.WriteFile(objpath+"/"+question.Hash, data, 0777)
+	err = ioutil.WriteFile(objpath+"/"+question.MetaInfo.Hash, data, 0777)
 	if err != nil {
 		return
 	}
@@ -126,8 +135,18 @@ func (question *Question) Save() (err error) {
 		}
 	}
 
-	// ログ・ファイルにメタ情報を保存する
-	return nil
+	// ログ・ファイルにメタ情報を追加する
+	log_data, err := init_log_data_from_meta(question.MetaInfo)
+	if err != nil {
+		return
+	}
+	f, err := os.OpenFile(logpath+"/HEAD", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777)
+	defer f.Close()
+	_, err = f.WriteString(log_data)
+	if err != nil {
+		return
+	}
+	return
 }
 
 func fileExists(filename string) bool {
@@ -140,9 +159,9 @@ func initMetaInfo(question *Question) (err error) {
 	// ハッシュ
 	subject := question.UserInput.RequireUserInput.Subject
 	name := question.UserInput.RequireUserInput.Subject
-	initDate := question.InitDate
+	initDate := question.MetaInfo.InitDate
 	hash, err := initHash(subject + name + initDate)
-	question.Hash = hash
+	question.MetaInfo.Hash = hash
 	return
 }
 
@@ -150,5 +169,15 @@ func initMetaInfo(question *Question) (err error) {
 func initHash(str string) (hash string, err error) {
 	p := []byte(str)
 	hash = fmt.Sprintf("%x", md5.Sum(p))
+	return
+}
+
+// ログ・ファイルに入力するデータを作る
+func init_log_data_from_meta(meta MetaInfo) (log_data string, err error) {
+	hash := meta.Hash
+	userName := meta.UserName
+	initDate := meta.InitDate
+	subject := meta.Subject
+	log_data = hash + " " + userName + " " + initDate + " " + subject + "\n"
 	return
 }
