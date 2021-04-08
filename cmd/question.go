@@ -118,6 +118,14 @@ func (question *Question) Save() (err error) {
 	}
 
 	//logsフォルダを作成する
+	logpath := qpath + "/logs"
+	if !fileExists(logpath) {
+		err = os.Mkdir(logpath, 0777)
+		if err != nil {
+			return
+		}
+	}
+
 	// ログ・ファイルにメタ情報を保存する
 	return nil
 }
