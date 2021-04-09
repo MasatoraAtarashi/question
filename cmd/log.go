@@ -1,11 +1,14 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
 
+	"github.com/icza/backscanner"
 	"github.com/spf13/cobra"
 )
 
@@ -21,21 +24,42 @@ var logCmd = &cobra.Command{
 	},
 }
 
-func runLogCmd(cmd *cobra.Command) (err error) {
+func runLogCmd(cobraCmd *cobra.Command) (err error) {
 	home_dir := os.Getenv("HOME")
 	log_path := home_dir + "/.question/logs/HEAD"
-	f, err := os.Open(log_path)
+	bytes, err := ioutil.ReadFile(log_path)
 	if err != nil {
 		return
 	}
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		slice := strings.Split(scanner.Text(), " ")
-		fmt.Printf("Question: " + slice[0] + "\n")
-		fmt.Printf("Author: " + slice[1] + "\n")
-		fmt.Printf("Date: " + slice[2] + " " + slice[3] + "\n")
-		fmt.Printf("\n\t" + slice[len(slice)-1] + "\n\n")
+	input := string(bytes)
+	scanner := backscanner.New(strings.NewReader(input), len(input))
+	var output string
+	for {
+		line, _, err := scanner.Line()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return err
+		}
+		slice := strings.Split(line, " ")
+		if len(slice) == 1 {
+			continue
+		}
+		question_hash := slice[0]
+		user_name := slice[1]
+		date := slice[2]
+		time := slice[3]
+		subject := slice[len(slice)-1]
+		output += "Question: " + question_hash + "\n"
+		output += "Author: " + user_name + "\n"
+		output += "Date: " + date + " " + time + "\n"
+		output += "\n\t" + subject + "\n\n"
 	}
+	cmd := exec.Command("less", "-R")
+	cmd.Stdin = strings.NewReader(output)
+	cmd.Stdout = os.Stdout
+	err = cmd.Run()
 	return
 }
 

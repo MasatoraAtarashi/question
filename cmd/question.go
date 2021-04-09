@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 	"text/template"
@@ -142,9 +143,8 @@ func (question *Question) Save() (err error) {
 	}
 	f, err := os.OpenFile(logpath+"/HEAD", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777)
 	defer f.Close()
-	_, err = f.WriteString(log_data)
-	if err != nil {
-		return
+	if _, err := f.WriteString(log_data); err != nil {
+		log.Println(err)
 	}
 	return
 }
