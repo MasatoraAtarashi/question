@@ -111,18 +111,24 @@ func runInitCmd(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	// 質問文を生成
-	result, err := question.Execute()
+	err = question.Execute()
 	if err != nil {
 		return
 	}
 
 	// 生成された質問文をユーザに確認してもらう
-	result, err = confirmQuestion(result)
+	question.Result, err = confirmQuestion(question.Result)
 	if err != nil {
 		return
 	}
 
-	fmt.Printf(result)
+	// 生成された質問を保存する
+	err = question.Save()
+	if err != nil {
+		return
+	}
+
+	fmt.Printf(question.Result)
 	return
 }
 
