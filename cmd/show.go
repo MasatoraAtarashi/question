@@ -14,7 +14,7 @@ import (
 
 // showCmd represents the show command
 var showCmd = &cobra.Command{
-	Use:   "show",
+	Use:   "show [<object>]",
 	Short: "Show the specified question",
 	Run: func(cmd *cobra.Command, args []string) {
 		err := runShowCmd(cmd, args)
