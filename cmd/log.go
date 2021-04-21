@@ -25,9 +25,7 @@ var logCmd = &cobra.Command{
 }
 
 func runLogCmd(cobraCmd *cobra.Command) (err error) {
-	home_dir := os.Getenv("HOME")
-	log_path := home_dir + "/.question/logs/HEAD"
-	bytes, err := ioutil.ReadFile(log_path)
+	bytes, err := getDataFromLogFile()
 	if err != nil {
 		return
 	}
@@ -42,6 +40,7 @@ func runLogCmd(cobraCmd *cobra.Command) (err error) {
 			}
 			return err
 		}
+		// ログ・ファイルを加工
 		slice := strings.Split(line, " ")
 		if len(slice) == 1 {
 			continue
@@ -56,6 +55,23 @@ func runLogCmd(cobraCmd *cobra.Command) (err error) {
 		output += "Date: " + date + " " + time + "\n"
 		output += "\n\t" + subject + "\n\n"
 	}
+	err = execLess(output)
+	if err != nil {
+		return
+	}
+	return
+}
+
+// ログ・ファイルからデータを取得
+func getDataFromLogFile() (bytes []byte, err error) {
+	home_dir := os.Getenv("HOME")
+	log_path := home_dir + "/.question/logs/HEAD"
+	bytes, err = ioutil.ReadFile(log_path)
+	return
+}
+
+// lessコマンドでログを表示
+func execLess(output string) (err error) {
 	cmd := exec.Command("less", "-R")
 	cmd.Stdin = strings.NewReader(output)
 	cmd.Stdout = os.Stdout
