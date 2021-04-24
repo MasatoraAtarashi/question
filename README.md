@@ -3,6 +3,8 @@ question - 技術系質問作成ツール
 
 [![MIT License](http://img.shields.io/badge/license-Apache-blue.svg?style=flat)](LICENSE)
 
+# 実装途中です
+
 ## Description
 `question`は「ちゃんとした」質問を簡単に作成することができるツールです。
 
